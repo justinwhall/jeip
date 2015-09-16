@@ -46,9 +46,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       cols        : 60,
 
       savebutton_text   : "SAVE",
-      savebutton_class  : "jeip-savebutton",
+      savebutton_class  : "btn btn-success",
       cancelbutton_text : "CANCEL",
-      cancelbutton_class  : "jeip-cancelbutton",
+      cancelbutton_class  : "btn btn-danger",
 
       mouseover_class   : "jeip-mouseover",
       editor_class    : "jeip-editor",
@@ -57,19 +57,22 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       saving_text     : "Saving ...",
       saving_class    : "jeip-saving",
 
-      saving        : '<span id="saving-#{id}" class="#{saving_class}" style="display: none;">#{saving_text}</span>',
+      // saving        : '<span id="saving-#{id}" class="#{saving_class}" style="display: none;">#{saving_text}</span>
+      saving        : '<article  id="saving-#{id}" class="#{saving_class} preloader" style="display: none;"><div class="loading-text" style="text-align:center;">Saving Text</div><section class="satelite"></section><section class="earth day"></section></article>',
 
-      start_form      : '<span id="editor-#{id}" class="#{editor_class}" style="display: none;position:absolute;z-index:999;background-color:white;padding:5px;border:1px solid #979797;">',
+      start_form      : '<span id="editor-#{id}" class="#{editor_class} eip-editor" style="display: none;">',
       form_buttons    : '<span><input type="button" id="save-#{id}" class="#{savebutton_class}" value="#{savebutton_text}" /> <input type="button" id="cancel-#{id}" class="#{cancelbutton_class}" value="#{cancelbutton_text}" /></span>',
       stop_form     : '</span>',
+      over_lay  : '<div class="eip-overlay"><div class="edit-holder"></div></div>',
 
-      text_form     : '<input type="text" id="edit-#{id}" class="#{editfield_class}" value="#{value}" style="width:400px;" /> <br />',
+      text_form     : '<input type="text" id="edit-#{id}" class="#{editfield_class}" value="#{value}"  /><br />',
       textarea_form   : '<textarea cols="#{cols}" rows="#{rows}" id="edit-#{id}" class="#{editfield_class}">#{value}</textarea> <br />',
-      start_select_form : '<select id="edit-#{id}" class="#{editfield_clas}">',
+      start_select_form : '<select id="edit-#{id}" class="#{editfield_clas} form-control" style="margin-bottom:20px;">',
       select_option_form  : '<option id="edit-option-#{id}-#{option_value}" value="#{option_value}" #{selected}>#{option_text}</option>',
       stop_select_form  : '</select>',
 
       after_save      : function( self ) {
+        $('.eip-overlay').remove();
         for( var i = 0; i < 2; i++ ) {
           $( self ).fadeOut( "fast" );
           $( self ).fadeIn( "fast" );
@@ -99,6 +102,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     // Private functions
     var _editMode = function( self ) {
+      $(opt.over_lay).appendTo('body');
       $( self ).unbind( opt.edit_event );
 
       $( self ).removeClass( opt.mouseover_class );
@@ -108,14 +112,16 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         var id    = self.id;
         var value = $( self ).html( );
 
+
         // If there is data attribute, use that
         if (fullText) {
           value = String(fullText);
         }
 
-        var safe_value  = value.replace( /</g, "&lt;" );
-        safe_value    = value.replace( />/g, "&gt;" );
-        safe_value    = value.replace( /"/g, "&qout;" );
+        // var safe_value  = value.replace( /</g, "&lt;" );
+        // safe_value    = value.replace( />/g, "&gt;" );
+        // safe_value    = value.replace( /"/g, "&qout;" );
+
 
         var orig_option_value = false;
 
@@ -127,8 +133,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if( opt.form_type == 'text' ) {
           form += _template( opt.text_form, {
             id        : self.id,
-            editfield_class : opt.editfield_class,
-            value     : value
+            editfield_class : opt.editfield_class
+            // value     : value
           } );
         } // text form
         else if( opt.form_type == 'textarea' ) {
@@ -194,7 +200,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         form += _template( opt.stop_form, { } );
 
-        $( self ).after( form );
+
+
+
+        // $( self ).after( form );
+        $( '.eip-overlay .edit-holder' ).css({ transform: 'scale(.5)' }).append( form );
+        $('.eip-overlay .edit-holder').find('.jeip-editfield').val(value);
+        $( '.eip-overlay .edit-holder' ).css({ transform: 'scale(1)' });
+        // $( '.eip-overlay .edit-holder' ).append( '<span id="editor-i8nhomePageTitle-editable" class="jeip-editor eip-editor" style="display: none;"><input type="text" id="edit-i8nhomePageTitle-editable" class="jeip-editfield" value="Regular text. <a href="http://www.justinwhall.com">Some other text that is linked</a>" maxlength="255" /><br /><span><input type="button" id="save-i8nhomePageTitle-editable" class="btn btn-success" value="SAVE" /> <input type="button" id="cancel-i8nhomePageTitle-editable" class="btn btn-danger" value="CANCEL" /></span></span>' );
+
         $( "#editor-" + self.id ).fadeIn( "fast" );
 
         if( opt.focus_edit ) {
@@ -228,9 +242,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     } // function _editMode
 
     var _template = function( template, values ) {
+
+
+
       var replace = function( str, match ) {
         return typeof values[match] === "string" || typeof values[match] === 'number' ? values[match] : str;
       };
+
+
       return template.replace( /#\{([^{}]*)}/g, replace );
     };
 
@@ -239,6 +258,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     }
 
     var _cancelEdit = function( self ) {
+      $('.eip-overlay').fadeOut('fast', function() {
+        $(this).remove();
+      });
       $( "#editor-" + self.id ).fadeOut( "fast" );
       $( "#editor-" + self.id ).remove( );
 
@@ -264,6 +286,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         $( self ).removeClass( opt.mouseover_class );
         $( self ).fadeIn( "fast" );
+        $('.eip-overlay').remove();
 
         return true;
       }
